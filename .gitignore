@@ -1,2 +1,5 @@
 dump.rdb
 satellite
+/pkg
+/src
+sample_post

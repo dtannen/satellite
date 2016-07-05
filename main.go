@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -14,20 +13,14 @@ import (
 )
 
 func main() {
-	redisURL := os.Getenv("REDIS_URL")
-	if redisURL == "" {
-		redisURLKey := os.Getenv("SATELLITE_REDIS_URL_KEY")
-		redisURL = os.Getenv(redisURLKey)
+	redisHost := os.Getenv("REDIS_HOST")
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+	if redisHost == "" {
+		redisHost = "localhost:6379"
 	}
-	if redisURL == "" {
-		redisURL = "localhost:6379"
+	if redisPassword == "" {
+		redisPassword = ""
 	}
-	u, err := url.Parse(redisURL)
-	if err != nil {
-		panic(err)
-	}
-	redisHost := u.Host
-	redisPassword, _ := u.User.Password()
 	pool := newPool(redisHost, redisPassword)
 
 	token := os.Getenv("TOKEN")
@@ -44,7 +37,7 @@ func main() {
 	}
 
 	handler := cors.Default().Handler(router)
-	err = http.ListenAndServe(":"+port, handler)
+	err := http.ListenAndServe(":"+port, handler)
 	if err != nil {
 		log.Fatal(err)
 	}

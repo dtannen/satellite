@@ -87,3 +87,31 @@ func TestSatellite(t *testing.T) {
 		t.Error("No message received")
 	}
 }
+
+func benchmarkSatellite(conns int, b *testing.B) {
+	satelliteServer := makeTestServer()
+	baseURL := satelliteServer.URL
+	channelURL := baseURL + "/" + "channel"
+	for n := 0; n < conns; n++ {
+		go func() {
+			stream, err := eventsource.Subscribe(channelURL, "")
+			if err != nil {
+				b.Fatal(err)
+			}
+			for {
+				e := <-stream.Events
+				if e.Data() != "" {
+					return
+				}
+			}
+		}()
+	}
+	v := url.Values{}
+	v.Set("token", "token")
+	v.Set("message", "message")
+	http.PostForm(channelURL, v)
+}
+
+func BenchmarkSatellite1(b *testing.B)   { benchmarkSatellite(1, b) }
+func BenchmarkSatellite10(b *testing.B)  { benchmarkSatellite(10, b) }
+func BenchmarkSatellite100(b *testing.B) { benchmarkSatellite(100, b) }
